@@ -4,5 +4,4 @@ This is a node-express based application to extract data from different-differen
 ## / route
 This route when called will provide response body to be like this:<br />
 
-![image of features]
-(https://github.com/Tarun215/images/blob/master/features.png)
+![image of features](https://github.com/Tarun215/images/blob/master/features.png)
