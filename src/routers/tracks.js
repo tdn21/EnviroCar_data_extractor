@@ -1,35 +1,17 @@
-const express = require('express')
-const request = require('request')
+const express = require('express');
 const fetch = require('node-fetch');
+const request = require('request');
 
-// const data = require('./data')
-const munster_data_2 = require('./data/munster_data_2')
+const _processPathData = require('../utils/_processPathData');
+const _processConsumptionData = require('../utils/_processConsumptionData');
+const munster_data_2 = require('../utils/data/munster_data_2');
+
+const router = new express.Router()
 
 const data = munster_data_2;
 
-const app = express()
-const port = process.env.PORT || 3000
-
-// Defining path processing function
-const _processPathData = (initial_data) => {
-    const data = initial_data.features.reduce((accu, curr) => {
-        accu.push(curr.geometry.coordinates)
-        return accu;
-    }, [])
-    return data;
-}
-
-// Defining consumption data processing function
-const _processConsumptionData = (initial_data) => {
-    const data = initial_data.features.reduce((accu, curr) => {
-        accu.push(curr.properties.phenomenons.Consumption)
-        return accu;
-    }, [])
-    return data;
-}
-
 // Root route
-app.get('/', (req,res) => {
+router.get('/', (req,res) => {
 
     const features = [];
     var counter = 0;
@@ -91,7 +73,7 @@ app.get('/', (req,res) => {
 })
 
 // Consumption route
-app.get('/consumption', (req, res) => {
+router.get('/consumption', (req, res) => {
     const features = []
     var counter = 0
 
@@ -173,6 +155,4 @@ app.get('/consumption', (req, res) => {
 })
 
 
-app.listen(port, () => {
-    console.log(`Server is up at port ${port}`)
-})
+module.exports = router;
