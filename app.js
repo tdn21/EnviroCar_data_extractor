@@ -1,5 +1,6 @@
 const express = require('express')
 const request = require('request')
+const fetch = require('node-fetch');
 
 // const data = require('./data')
 const munster_data_2 = require('./data/munster_data_2')
@@ -11,7 +12,6 @@ const port = process.env.PORT || 3000
 
 // Defining path processing function
 const _processPathData = (initial_data) => {
-
     const data = initial_data.features.reduce((accu, curr) => {
         accu.push(curr.geometry.coordinates)
         return accu;
@@ -28,108 +28,69 @@ const _processConsumptionData = (initial_data) => {
     return data;
 }
 
-// Route to root of webapp
-app.get('/', (req, res) => {
+// Root route
+app.get('/', (req,res) => {
+
     const features = [];
-    const stats = [];
-    var track_counter = 0;
-    var stats_counter = 0;
+    var counter = 0;
 
-    for (var i = 0; i < data.tracks.length; i++) {
+    for(var i = 0; i < data.tracks.length; i++) {
 
-        // url for requesting particular track
-        const url = `https://envirocar.org/api/stable/tracks/${data.tracks[i].id}`;
+        // url's for requesting particular track and its statistics
+        const track_url = `https://envirocar.org/api/stable/tracks/${data.tracks[i].id}`;
         const stats_url = `https://envirocar.org/api/stable/tracks/${data.tracks[i].id}/statistics`;
 
-        // Callback function for track request
-        const callback = (err, body) => {
-            if (err) {
-                return console.log({
-                    error: err
-                })
-            }
-
-            path = _processPathData(body);
-
-            features.push({
-                type: "Feature",
-                properties: body.properties,
-                geometry: {
-                    type: "LineString",
+        fetch(track_url).
+            then(res => res.json()).
+            then(body => {
+                const path = _processPathData(body);
+                const geometry = {
+                    type: "Linestring",
                     coordinates: path
                 }
+
+                return {
+                        properties: body.properties,
+                        geometry
+                    };
+            }).
+            then(track_data => {
+                fetch(stats_url).
+                    then(res => res.json()).
+                    then(statistics => {
+                        features.push({
+                            type: "Feature",
+                            properties: track_data.properties,
+                            geometry: track_data.geometry,
+                            statistics: statistics.statistics
+                        })
+                    }).
+                    then(()=>{
+                        counter++;
+                        console.log("Tracks left to process : ",100-counter);
+                    }).
+                    then(()=> {
+                        if(counter === 100) {
+                            console.log("Response Successfully Sent!!")
+                            res.send({
+                                type: "FeatureCollection",
+                                properties: {},
+                                features
+                            })
+                        }
+                    })
+            }).
+            catch(err => {
+                console.log("Unable to proccess request to / route!");
+                console.log();
+                console.log(err);
+
+                res.status(400).send('Unable to process request!');
             })
-            track_counter++;
-            console.log("counter : ", track_counter)
-            // console.log("data.tracks.length-1 : ", data.tracks.length-1)
-
-            if (track_counter === data.tracks.length && stats_counter === data.tracks.length) {
-                console.log("Sending response")
-                console.log('stats_array: ',stats)
-                res.send({
-                    type: "FeatureCollection",
-                    properties: {},
-                    features
-                })
-            }
-        }
-
-        // Callback function for track_stats request
-        const stats_callback = (err, body) => {
-            if (err) {
-                return console.log({
-                    error: err
-                });
-            };
-
-            // const stats= body;
-
-            stats.push(body.statistics)
-            stats_counter++;
-            console.log("stats_counter : ", stats_counter)
-
-            if (track_counter === data.tracks.length && stats_counter === data.tracks.length) {
-                console.log("stats array:", stats)
-                console.log("Sending response from stats_callback")
-                res.send({
-                    type: "FeatureCollection",
-                    properties: {},
-                    stats,
-                    features
-                })
-            }
-        }
-
-        // stats_url
-        request({ url: stats_url, json: true }, (err, res) => {
-            if (err) {
-                stats_callback(err, undefined);
-            }
-            // else if (res.body.features.length === 0) {
-            //     stats_callback('Unable to get track', undefined);
-            // }
-            else {
-                // console.log('res.body : ', res.body)
-                stats_callback(undefined, res.body);
-            }
-        })
-
-        // request
-        request({ url, json: true }, (err, res) => {
-            if (err) {
-                callback('Unable to connect to EnviroCar API', undefined);
-            }
-            else if (res.body.features.length === 0) {
-                callback('Unable to get track', undefined);
-            }
-            else {
-                // console.log('res.body : ', res.body)
-                callback(undefined, res.body);
-            }
-        })
     }
 })
 
+// Consumption route
 app.get('/consumption', (req, res) => {
     const features = []
     var counter = 0
