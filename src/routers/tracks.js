@@ -74,67 +74,41 @@ router.get('/', (req,res) => {
 
 // Consumption route
 router.get('/consumption', (req, res) => {
-    const features = []
-    var counter = 0
+    const features=[];
+    var counter=0;
 
-    for (var j = 0; j < data.tracks.length; j++) {
+    for(var j=0 ;j < data.tracks.length; j++) {
 
-        // url for requesting particular track
+        // url
         const url = `https://envirocar.org/api/stable/tracks/${data.tracks[j].id}`
 
         const callback = (err, body) => {
             if (err) {
                 return console.log({
-                    error: err
-                })
-            }
-            const path = _processPathData(body);
-
-            const consumption_data = _processConsumptionData(body);
-
-            // Processing consumption data
-            for (var i = 0; i < path.length - 1; i++) {
-                var consumption;
-                try {
-                    if (consumption_data[i + 1])
-                        consumption = ((consumption_data[i].value + consumption_data[i + 1].value) / 2)
-                    else
-                        consumption = ((consumption_data[i - 1].value + consumption_data[i].value) / 2)
-                } catch (err) {
-                    consumption = -1;
-                    // console.log('Error : Consumption data not available')
-                }
-
-                // Defining Color for different values of consumption data
-                var color;
-
-                if (consumption === -1)
-                    color = [0, 0, 255]
-                else
-                    color = (consumption < 1) ? [0, 255, 0] : (consumption < 2 ? [128, 255, 0] : (consumption < 3 ? [255, 255, 0] : (consumption < 4 ? [255, 128, 0] : [255, 0, 0])));
-
-                features.push({
-                    type: "Feature",
-                    properties: {
-                        consumption,
-                        color
-                    },
-                    geometry: {
-                        type: "MultiLineString",
-                        coordinates: [[path[i], path[i + 1]]]
-                    }
+                    "Error" : err
                 })
             }
 
+            const path = _processPathData(body)
+            const consumption_data = _processConsumptionData(body)
+            
+            features.push({
+                type: "Feature",
+                properties: {},
+                geometry: {
+                    type: "Linestring",
+                    coordinates: path
+                },
+                consumption: consumption_data
+            })
             counter++;
-            console.log("counter : ", counter)
-            console.log("data.tracks.length-1 : ", data.tracks.length - 1)
+            console.log("Counter : ", counter);
 
-            if (counter === data.tracks.length) {
+            if(counter === data.tracks.length) {
                 console.log("Sending response")
                 res.send({
                     type: "FeatureCollection",
-                    properties: { counter },
+                    properties: {},
                     features
                 })
             }

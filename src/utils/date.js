@@ -1,4 +1,4 @@
-const munster_data_2 = require('../data/munster_data_2');
+const munster_data_2 = require('./data/munster_data_2');
 
 const data = munster_data_2;
 

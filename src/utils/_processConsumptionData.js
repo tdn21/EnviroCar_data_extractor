@@ -4,7 +4,13 @@ const _processConsumptionData = (initial_data) => {
         accu.push(curr.properties.phenomenons.Consumption)
         return accu;
     }, [])
-    return data;
+    const final_data = data.map(d => {
+        if(d && d.value) {
+            return d.value;
+        }
+        else return -1;
+    })
+    return final_data;
 }
 
 module.exports = _processConsumptionData;
