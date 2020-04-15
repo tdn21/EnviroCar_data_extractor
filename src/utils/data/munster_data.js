@@ -1,4 +1,4 @@
-const munster_data_2 = {
+const munster_data = {
     "tracks": [
         {
             "id": "5e6a677a77e02d42aa795bef",
@@ -1703,4 +1703,4 @@ const munster_data_2 = {
     ]
 }
 
-module.exports = munster_data_2;
+module.exports = munster_data;

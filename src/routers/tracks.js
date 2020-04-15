@@ -4,11 +4,12 @@ const request = require('request');
 
 const _processPathData = require('../utils/_processPathData');
 const _processConsumptionData = require('../utils/_processConsumptionData');
-const munster_data_2 = require('../utils/data/munster_data_2');
+const _processSpeedData = require('../utils/_processSpeedData');
+const munster_data = require('../utils/data/munster_data');
 
 const router = new express.Router()
 
-const data = munster_data_2;
+const data = munster_data;
 
 // Root route
 router.get('/', (req,res) => {
@@ -26,6 +27,8 @@ router.get('/', (req,res) => {
             then(res => res.json()).
             then(body => {
                 const path = _processPathData(body);
+                const consumption_data = _processConsumptionData(body);
+                const speed_data = _processSpeedData(body);
                 const geometry = {
                     type: "Linestring",
                     coordinates: path
@@ -33,7 +36,9 @@ router.get('/', (req,res) => {
 
                 return {
                         properties: body.properties,
-                        geometry
+                        geometry,
+                        consumption_data,
+                        speed_data
                     };
             }).
             then(track_data => {
@@ -44,7 +49,9 @@ router.get('/', (req,res) => {
                             type: "Feature",
                             properties: track_data.properties,
                             geometry: track_data.geometry,
-                            statistics: statistics.statistics
+                            statistics: statistics.statistics,
+                            consumption: track_data.consumption_data,
+                            speed: track_data.speed_data
                         })
                     }).
                     then(()=>{
@@ -71,6 +78,7 @@ router.get('/', (req,res) => {
             })
     }
 })
+
 
 // Consumption route
 router.get('/consumption', (req, res) => {
